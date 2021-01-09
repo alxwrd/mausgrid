@@ -1,0 +1,133 @@
+<html lang="en">
+
+<head>
+  <title>Mausgrid</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="title" content="Mausgrid">
+  <meta name="description" content="Mousescale grids for your mousescale adventures">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://alxwrd.co.uk/mausgrid">
+  <meta property="og:title" content="Mausgrid">
+  <meta property="og:description" content="Mousescale grids for your mousescale adventures">
+  <meta property="og:image" content="https://i.imgur.com/xRmnK9B.png">
+
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://alxwrd.co.uk/mausgrid">
+  <meta property="twitter:title" content="Mausgrid">
+  <meta property="twitter:description" content="Mousescale grids for your mousescale adventures">
+  <meta property="twitter:image" content="https://i.imgur.com/xRmnK9B.png">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin="" />
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
+  <script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
+
+  <style>
+    @font-face {
+      font-family: "ff-brokenscript-bc-web";
+      src: url("https://use.typekit.net/af/ed2608/00000000000000003b9b0801/27/l?primer=81a69539b194230396845be9681d114557adfb35f4cccc679c164afb4aa47365&fvd=n7&v=3") format("woff2"), url("https://use.typekit.net/af/ed2608/00000000000000003b9b0801/27/d?primer=81a69539b194230396845be9681d114557adfb35f4cccc679c164afb4aa47365&fvd=n7&v=3") format("woff"), url("https://use.typekit.net/af/ed2608/00000000000000003b9b0801/27/a?primer=81a69539b194230396845be9681d114557adfb35f4cccc679c164afb4aa47365&fvd=n7&v=3") format("opentype");
+      font-display: auto;
+      font-style: normal;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+
+
+
+<body>
+  <div class="flex h-1/6">
+    <p class="py-12 mx-auto text-8xl w-5/6 text-center" style="font-family: ff-brokenscript-bc-web, serif;">Mausgrid</p>
+  </div>
+  <div class="flex h-5/6">
+    <div id="map" class="shadow-md rounded-lg mx-auto my-10 w-1/2 h-5/6"></div>
+  </div>
+
+
+  <script>
+
+    function getBoundingBox(latlng, distanceInKm) {
+
+      const deltaLat = distanceInKm / 110.574235;
+      const deltaLong = distanceInKm / (110.572833 * Math.cos(latlng.lat * Math.PI / 180));
+
+      return [
+        latlng.lng - deltaLong, latlng.lat + deltaLat,
+        latlng.lng + deltaLong, latlng.lat - deltaLat
+      ];
+    }
+
+
+    function drawgrid(latlng, layer) {
+      console.log(latlng)
+      layer.clearLayers();
+
+      var hexgrid = turf.hexGrid(
+        getBoundingBox(latlng, 3 * 1.609),
+        0.5,
+        {
+          units: 'miles',
+          mask: turf.circle(
+            [latlng.lng, latlng.lat],
+            1.6,
+            { 'steps': 6, units: 'miles' }
+          )
+        }
+      );
+
+      L.geoJson(hexgrid.features,
+        {
+          style: {
+            weight: 1,
+            color: "#333333",
+            opacity: 1,
+            fillOpacity: 0
+          }
+        }).addTo(hexLayer);
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+      let center = { lat: 53.05958046317886, lng: -1.6131019592285156 };
+
+      if (localStorage.getItem('mausgrid')) {
+        center = JSON.parse(localStorage.getItem('mausgrid'));
+      }
+
+
+      var map = L.map(
+        'map',
+        {
+          zoomControl: false,
+          maxZoom: 18,
+          minZoom: 5,
+        }
+      ).setView([center.lat + 0.003, center.lng], 13);
+      hexLayer = L.layerGroup().addTo(map);
+
+      map.on('click', (event) => {
+        drawgrid(event.latlng, hexLayer);
+        localStorage.setItem('mausgrid', JSON.stringify(event.latlng));
+      })
+
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      console.log(center)
+      drawgrid(center, hexLayer)
+    }, false);
+
+  </script>
+</body>
+
+</html>
