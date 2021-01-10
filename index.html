@@ -87,7 +87,7 @@
             return;
           }
 
-          updateLocation({ lat: parseFloat(first.lat), lng: parseFloat(first.lon) }, { persist: false })
+          updateLocation({ lat: parseFloat(first.lat), lng: parseFloat(first.lon) }, { persist: false, updateUrl: true })
         });
     }
 
@@ -104,6 +104,7 @@
 
     function updateLocation(location, options) {
       drawgrid(location, hexLayer);
+
       if (options && options.persist) {
         localStorage.setItem('mausgrid', JSON.stringify(location));
       }
@@ -111,7 +112,10 @@
       const url = new URL(window.location);
       url.searchParams.set('search', `${location.lat.toFixed(6)},${location.lng.toFixed(6)}`);
       document.title = `Mausgrid @ ${location.lat.toFixed(6)},${location.lng.toFixed(6)}`
-      window.history.replaceState({}, window.title, url);
+
+      if (options && options.updateUrl) {
+        window.history.replaceState({}, window.title, url);
+      }
 
       map.setView([location.lat + 0.003, location.lng], 12);
     }
@@ -164,7 +168,7 @@
       hexLayer = L.layerGroup().addTo(map);
 
       map.on('click', (event) => {
-        updateLocation(event.latlng, { persist: true });
+        updateLocation(event.latlng, { persist: true, updateUrl: true });
       })
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -179,7 +183,7 @@
         return;
       }
 
-      updateLocation(center, { persist: false })
+      updateLocation(center, { persist: false, updateUrl: false })
     }, false);
 
   </script>
