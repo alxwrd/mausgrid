@@ -10,3 +10,4 @@ the TTRPG, [Mausritter](https://mausritter.com).
 
 - Click to place a new grid.
 - Your grid is saved in your browsers local storage for next time.
+- Share your grids.
