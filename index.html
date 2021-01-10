@@ -109,7 +109,7 @@
       }
 
       const url = new URL(window.location);
-      url.searchParams.set('search', `${location.lat},${location.lng}`);
+      url.searchParams.set('search', `${location.lat.toFixed(6)},${location.lng.toFixed(6)}`);
       document.title = `Mausgrid @ ${location.lat.toFixed(6)},${location.lng.toFixed(6)}`
       window.history.replaceState({}, window.title, url);
 
