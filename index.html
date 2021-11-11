@@ -26,6 +26,7 @@
   <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-simple-map-screenshoter"></script>
   <script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
 
   <style>
@@ -39,31 +40,33 @@
   </style>
 </head>
 
-<body>
-  <div class="flex md:h-36">
-    <p class="py-3 md:py-12 mx-auto text-6xl md:text-8xl w-5/6 text-center"
-      style="font-family: ff-brokenscript-bc-web, serif;">Mausgrid</p>
-  </div>
-  <div class="flex">
-    <div class="pt-2 relative mx-auto text-gray-600">
-      <form onsubmit="performSearch(event)">
-        <input class="border-b-2 border-gray-300 bg-white h-10 px-5 pr-16 text-sm focus:outline-none" type="search"
-          name="search" placeholder="Search">
-        <button type="submit" class="absolute right-0 top-0 mt-5 mr-4">
-          <svg class="text-gray-600 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px"
-            viewBox="0 0 56.966 56.966" style="enable-background:new 0 0 56.966 56.966;" xml:space="preserve"
-            width="512px" height="512px">
-            <path
-              d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z" />
-          </svg>
-        </button>
-      </form>
+<body class="flex flex-col h-screen">
+  <div class="px-8 py-4 w-min mx-auto m-2 shadow-md rounded-lg z-10 bg-gray-100">
+    <div class="flex">
+      <p class="py-4 mx-auto text-6xl md:text-8xl text-center"
+        style="font-family: ff-brokenscript-bc-web, serif;">Mausgrid</p>
+    </div>
+    <div class="flex">
+      <div class="relative mx-auto text-gray-600">
+        <form onsubmit="performSearch(event)">
+          <input class="border-b-2 border-gray-300 bg-white h-10 px-5 pr-16 text-sm focus:outline-none" type="search"
+            name="search" placeholder="Search">
+          <button type="submit" class="absolute right-0 top-0 mt-5 mr-4">
+            <svg class="text-gray-600 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px"
+              viewBox="0 0 56.966 56.966" style="enable-background:new 0 0 56.966 56.966;" xml:space="preserve"
+              width="512px" height="512px">
+              <path
+                d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z" />
+            </svg>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
-  <div style="height: 75%">
-    <div class="flex h-full">
-      <div id="map" class="shadow-md rounded-lg mx-auto w-5/6 lg:w-1/2 h-full md:h-5/6"></div>
+  <div class="h-screen w-screen z-0" style="position: fixed; top: 0; left: 0;">
+    <div class="flex h-full w-full">
+      <div id="map" class="h-full w-full"></div>
     </div>
   </div>
 
@@ -87,19 +90,8 @@
             return;
           }
 
-          updateLocation({ lat: parseFloat(first.lat), lng: parseFloat(first.lon) }, { persist: false, updateUrl: true })
+          updateLocation({ lat: parseFloat(first.lat), lng: parseFloat(first.lon) }, { persist: false, updateUrl: true, updateView: true})
         });
-    }
-
-    function getBoundingBox(latlng, distanceInKm) {
-
-      const deltaLat = distanceInKm / 110.574235;
-      const deltaLong = distanceInKm / (110.572833 * Math.cos(latlng.lat * Math.PI / 180));
-
-      return [
-        latlng.lng - deltaLong, latlng.lat + deltaLat,
-        latlng.lng + deltaLong, latlng.lat - deltaLat
-      ];
     }
 
     function updateLocation(location, options) {
@@ -117,32 +109,92 @@
         window.history.replaceState({}, window.title, url);
       }
 
-      map.setView([location.lat + 0.003, location.lng], 12);
+      if (options.updateView) {
+        map.setView([location.lat + 0.003, location.lng], 12);
+      }
     }
 
 
     function drawgrid(latlng, layer) {
       layer.clearLayers();
 
-      var hexgrid = turf.hexGrid(
-        getBoundingBox(latlng, 3 * 1.609),
-        0.5,
+      const hexSize = 1;
+      const hexRadius = hexSize / 2;
+      const gridSize = 6;
+
+      if (gridSize % 3 === 0) {
+        ellipseWarp = 0
+      } else {
+        ellipseWarp = gridSize % 2 == 0? hexRadius : hexRadius
+      }
+
+      let bigHex = turf.ellipse(
+          turf.point([latlng.lng, latlng.lat]),
+          (hexRadius * gridSize),
+          (hexRadius * gridSize) + ellipseWarp,
+          {units: 'miles', steps: 100}
+      );
+
+      bigHex = turf.transformRotate(bigHex, 90);
+
+      let bigHexMask = turf.circle(
+        turf.point([latlng.lng, latlng.lat]),
+        (hexRadius * gridSize) - hexSize,
+        {units: 'miles', steps: 6}
+      );
+
+
+      // L.geoJSON(turf.circle(
+      //   turf.point([latlng.lng, latlng.lat]),
+      //   (hexRadius * gridSize),
+      //   {units: 'miles', steps: 6}
+      // ), {color: 'green'}).addTo(map)
+
+
+
+      const bigHexBoundingBox = turf.bbox(bigHex);
+
+      // L.geoJSON(bigHex, {color: 'red'}).addTo(hexLayer)
+
+      // L.geoJSON(bigHexMask, {color: 'yellow'}).addTo(hexLayer)
+      // L.geoJSON(turf.bboxPolygon(bigHexBoundingBox), {color: 'red'}).addTo(hexLayer)
+      // L.marker([latlng.lat, latlng.lng]).addTo(hexLayer)
+
+      var hexgrid = turf.hexGrid(bigHexBoundingBox, hexRadius,
+        {
+          units: 'miles',
+          mask: bigHexMask
+        }
+      );
+      var hexgrid2 = turf.hexGrid(bigHexBoundingBox, hexRadius/5,
         {
           units: 'miles',
           mask: turf.circle(
-            [latlng.lng, latlng.lat],
-            1.6,
-            { 'steps': 6, units: 'miles' }
-          )
+            turf.point([latlng.lng, latlng.lat]),
+            (hexRadius * gridSize) - hexSize,
+            {units: 'miles', steps: 6}
+        )
         }
       );
+
+
 
       L.geoJson(hexgrid.features,
         {
           style: {
             weight: 1,
-            color: "#333333",
-            opacity: 1,
+            color: "#000",
+            opacity: .4,
+            fillOpacity: 0
+          }
+        }).addTo(hexLayer);
+
+        L.geoJson(hexgrid2.features,
+        {
+          style: {
+            weight: .5,
+            color: "#000",
+            opacity: .3,
             fillOpacity: 0
           }
         }).addTo(hexLayer);
@@ -165,6 +217,7 @@
           minZoom: 5,
         }
       )
+      L.simpleMapScreenshoter().addTo(map)
       hexLayer = L.layerGroup().addTo(map);
 
       map.on('click', (event) => {
@@ -183,7 +236,7 @@
         return;
       }
 
-      updateLocation(center, { persist: false, updateUrl: false })
+      updateLocation(center, { persist: false, updateUrl: false, updateView: true})
     }, false);
 
   </script>
